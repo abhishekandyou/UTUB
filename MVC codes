@@ -223,3 +223,99 @@ return Json(new HttpResponsePackage
             {
                 return Json(new HttpResponsePackage { status = false, message = MessageConstants.ErrorException });
             }
+
+@{
+    var messageModel = TempData["Message"] == null ? null : (CommonPortal.Models.Message)TempData["Message"];
+    if (messageModel != null)
+    {
+
+        if (messageModel.MessageType == CommonPortal.Models.MessageType.Error && messageModel.MessageDisplayType == CommonPortal.Models.MessageDisplayType.Alert)
+        {
+            <div class="alert alert-danger alert-dismissible fade show text-center p-1 m-0" role="alert">
+                @messageModel.MessageText
+                <button type="button" class="close p-0 pr-1" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+        }
+
+        else if (messageModel.MessageDisplayType == CommonPortal.Models.MessageDisplayType.Alert)
+        {
+            <div class=" alert alert-@messageModel.MessageType.ToString().ToLower() alert-dismissible fade show text-center p-1 m-0" role="alert">
+                @messageModel.MessageText
+                <button type="button" class="close p-0 pr-1" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+        }
+        else if (messageModel.MessageType == CommonPortal.Models.MessageType.Error && messageModel.MessageDisplayType == CommonPortal.Models.MessageDisplayType.Text)
+        {
+            <div class="text-danger text-center p-1 m-0" role="alert">
+                @messageModel.MessageText
+            </div>
+
+        }
+
+        else
+        {
+            <div class=" alert alert-@messageModel.MessageType.ToString().ToLower() alert-dismissible fade show text-center p-1 m-0" role="alert">
+                @messageModel.MessageText
+                <button type="button" class="close p-0 pr-1" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @*<div class="text-@messageModel.MessageType.ToString().ToLower()  text-center p-1 m-0 alert-dismissible fade show" role="alert">
+                @messageModel.MessageText
+            </div>*@
+
+        }
+    }
+
+}
+<script type="text/javascript">
+
+    document.addEventListener("DOMContentLoaded", function (event) {
+        $('[role="message"]').slideUp(4000);
+    });
+
+</script>
+
+(function ($) {
+    'use strict';
+    $.fn.ShowMessage = function (type, text) {
+        var html = '<div class="alert alert-' + type + ' alert-dismissible fade show text-center" style="padding: 0.2rem 0.25rem;margin-bottom: 0;border-radius: 0;">\
+            <button type = "button" class="close" data-dismiss="alert" style="line-height: 0.5" >&times;</button>\
+               <div class="d-flex align-items-center justify-content-center"> <i class="mdi mdi-information-variant icon-md"></i> <div>'+ text + '</div></div> </div>';
+        $('[html-control="message"]').empty().html(html);
+        
+    }
+
+    $.fn.Request = function (url, requestType, requestData, callbackfn) {
+        $('[html-control="loader"]').show();
+        $.ajax({
+            type: requestType,
+            url: url,
+            async: true,
+            data: requestData,
+            dataType: 'json',
+            contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+            success: function (response) {
+                $('[html-control="loader"]').hide();
+                if (typeof callbackfn === "function") callbackfn(response);
+            },
+            complete: function () {
+                $('[html-control="loader"]').hide();
+            },
+            error: function (response) {
+                $('[html-control="loader"]').hide();
+                if (response.status == 409)
+                    return;
+                if (response !== null && response.status === false)
+                    $.fn.ShowMessage("danger", response.data.Message);
+                $.fn.ShowMessage("danger", "An error on connection.");
+            }
+        });
+    }
+})(jQuery);
